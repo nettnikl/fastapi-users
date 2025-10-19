@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from fastapi_users import models
@@ -118,7 +118,7 @@ def get_auth_router(
             "/refresh", name=f"auth:{backend.name}.refresh", responses=refresh_responses
         )
         async def refresh(
-            refresh_token: str = Form(...),
+            refresh_token: str = Body(..., embed=True),
             strategy: StrategyRefresh[models.UP, models.ID] = Depends(
                 backend.get_strategy
             ),
