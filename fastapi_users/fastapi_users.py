@@ -1,9 +1,14 @@
-from typing import Generic, Optional, Sequence, Type
+from collections.abc import Sequence
+from typing import Generic, Optional
 
 from fastapi import APIRouter
 
 from fastapi_users import models, schemas
-from fastapi_users.authentication import Authenticator, BaseAuthenticationBackend
+from fastapi_users.authentication import (
+    Authenticator,
+    BaseAuthenticationBackend,
+)
+from fastapi_users.authentication.models import TokenType
 from fastapi_users.jwt import SecretType
 from fastapi_users.manager import UserManagerDependency
 from fastapi_users.router import (
@@ -20,7 +25,7 @@ try:
     from fastapi_users.router import get_oauth_router
     from fastapi_users.router.oauth import get_oauth_associate_router
 except ModuleNotFoundError:  # pragma: no cover
-    BaseOAuth2 = Type  # type: ignore
+    BaseOAuth2 = type  # type: ignore
 
 
 class FastAPIUsers(Generic[models.UP, models.ID]):
@@ -35,19 +40,19 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
     with a specific set of parameters.
     """
 
-    authenticator: Authenticator
+    authenticator: Authenticator[models.UP, models.ID, TokenType]
 
     def __init__(
         self,
         get_user_manager: UserManagerDependency[models.UP, models.ID],
-        auth_backends: Sequence[BaseAuthenticationBackend],
+        auth_backends: Sequence[BaseAuthenticationBackend[models.UP, models.ID, TokenType]],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager
         self.current_user = self.authenticator.current_user
 
     def get_register_router(
-        self, user_schema: Type[schemas.U], user_create_schema: Type[schemas.UC]
+        self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -59,7 +64,7 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
             self.get_user_manager, user_schema, user_create_schema
         )
 
-    def get_verify_router(self, user_schema: Type[schemas.U]) -> APIRouter:
+    def get_verify_router(self, user_schema: type[schemas.U]) -> APIRouter:
         """
         Return a router with e-mail verification routes.
 
@@ -73,7 +78,7 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
 
     def get_auth_router(
         self,
-        backend: BaseAuthenticationBackend,
+        backend: BaseAuthenticationBackend[models.UP, models.ID, TokenType],
         requires_verification: bool = False,
     ) -> APIRouter:
         """
@@ -93,7 +98,7 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
     def get_oauth_router(
         self,
         oauth_client: BaseOAuth2,
-        backend: BaseAuthenticationBackend,
+        backend: BaseAuthenticationBackend[models.UP, models.ID, TokenType],
         state_secret: SecretType,
         redirect_url: Optional[str] = None,
         associate_by_email: bool = False,
@@ -126,7 +131,7 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
     def get_oauth_associate_router(
         self,
         oauth_client: BaseOAuth2,
-        user_schema: Type[schemas.U],
+        user_schema: type[schemas.U],
         state_secret: SecretType,
         redirect_url: Optional[str] = None,
         requires_verification: bool = False,
@@ -154,8 +159,8 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
 
     def get_users_router(
         self,
-        user_schema: Type[schemas.U],
-        user_update_schema: Type[schemas.UU],
+        user_schema: type[schemas.U],
+        user_update_schema: type[schemas.UU],
         requires_verification: bool = False,
     ) -> APIRouter:
         """

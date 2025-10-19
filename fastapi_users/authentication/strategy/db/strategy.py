@@ -1,7 +1,7 @@
 import secrets
 from abc import abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Generic, Optional
+from typing import Any, Generic, Optional
 
 from fastapi_users import exceptions, models
 from fastapi_users.authentication.models import AccessRefreshToken, TokenType
@@ -83,7 +83,7 @@ class DatabaseStrategy(
         access_token = await self.database.create(access_token_dict)
         return access_token.token
 
-    def _create_access_token_dict(self, user: models.UP) -> Dict[str, Any]:
+    def _create_access_token_dict(self, user: models.UP) -> dict[str, Any]:
         token = secrets.token_urlsafe()
         return {"token": token, "user_id": user.id}
 
@@ -112,7 +112,7 @@ class DatabaseRefreshStrategy(
                 seconds=self.refresh_lifetime_seconds
             )
         return max_age
-    
+
     async def read_token_by_refresh(
         self,
         refresh_token: Optional[str],
@@ -144,7 +144,7 @@ class DatabaseRefreshStrategy(
             if access_token is not None:
                 await self.database.delete(access_token)
 
-    def _create_access_refresh_token_dict(self, user: models.UP) -> Dict[str, Any]:
+    def _create_access_refresh_token_dict(self, user: models.UP) -> dict[str, Any]:
         access_token = secrets.token_urlsafe()
         refresh_token = secrets.token_urlsafe()
         token_dict = {

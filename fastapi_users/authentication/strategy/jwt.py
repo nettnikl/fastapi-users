@@ -1,4 +1,4 @@
-from typing import Generic, List, Optional
+from typing import Generic, Optional
 
 import jwt
 
@@ -6,6 +6,7 @@ from fastapi_users import exceptions, models
 from fastapi_users.authentication.strategy.base import (
     Strategy,
     StrategyDestroyNotSupportedError,
+    StrategyRefresh,
 )
 from fastapi_users.jwt import SecretType, decode_jwt, generate_jwt
 from fastapi_users.manager import BaseUserManager
@@ -22,7 +23,7 @@ class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID])
         self,
         secret: SecretType,
         lifetime_seconds: Optional[int],
-        token_audience: List[str] = ["fastapi-users:auth"],
+        token_audience: list[str] = ["fastapi-users:auth"],
         algorithm: str = "HS256",
         public_key: Optional[SecretType] = None,
     ):

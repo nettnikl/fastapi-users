@@ -16,12 +16,12 @@ class BaseAccessTokenDatabase(Protocol, Generic[TokenIdentityType, TokenType]):
         """Get a single access token by token."""
         ...  # pragma: no cover
 
-    async def create(self, create_dict: Dict[str, Any]) -> TokenType:
+    async def create(self, create_dict: dict[str, Any]) -> TokenType:
         """Create an access token."""
         ...  # pragma: no cover
 
     async def update(
-        self, access_token: TokenType, update_dict: Dict[str, Any]
+        self, access_token: TokenType, update_dict: dict[str, Any]
     ) -> TokenType:
         """Update an access token."""
         ...  # pragma: no cover

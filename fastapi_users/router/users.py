@@ -1,18 +1,17 @@
-from typing import Type
-
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from fastapi_users import exceptions, models, schemas
 from fastapi_users.authentication import Authenticator
+from fastapi_users.authentication.models import TokenType
 from fastapi_users.manager import BaseUserManager, UserManagerDependency
 from fastapi_users.router.common import ErrorCode, ErrorModel
 
 
 def get_users_router(
     get_user_manager: UserManagerDependency[models.UP, models.ID],
-    user_schema: Type[schemas.U],
-    user_update_schema: Type[schemas.UU],
-    authenticator: Authenticator,
+    user_schema: type[schemas.U],
+    user_update_schema: type[schemas.UU],
+    authenticator: Authenticator[models.UP, models.ID, TokenType],
     requires_verification: bool = False,
 ) -> APIRouter:
     """Generate a router with the authentication routes."""

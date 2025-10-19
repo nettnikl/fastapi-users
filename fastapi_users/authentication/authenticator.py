@@ -1,12 +1,14 @@
 import re
+from collections.abc import Sequence
 from inspect import Parameter, Signature
-from typing import Any, Callable, List, Optional, Sequence, Tuple, cast
+from typing import Any, Callable, Generic, Optional, cast
 
 from fastapi import Depends, HTTPException, status
 from makefun import with_signature
 
 from fastapi_users import models
-from fastapi_users.authentication.backend import BaseAuthenticationBackend, TokenType
+from fastapi_users.authentication.backend import BaseAuthenticationBackend
+from fastapi_users.authentication.models import TokenType
 from fastapi_users.authentication.strategy.base import BaseStrategy
 from fastapi_users.manager import BaseUserManager, UserManagerDependency
 from fastapi_users.types import DependencyCallable
@@ -31,10 +33,12 @@ class DuplicateBackendNamesError(Exception):
     pass
 
 
-EnabledBackendsDependency = DependencyCallable[Sequence[BaseAuthenticationBackend]]
+EnabledBackendsDependency = DependencyCallable[
+    Sequence[BaseAuthenticationBackend[models.UP, models.ID, TokenType]]
+]
 
 
-class Authenticator:
+class Authenticator(Generic[models.UP, models.ID, TokenType]):
     """
     Provides dependency callables to retrieve authenticated user.
 
@@ -46,7 +50,7 @@ class Authenticator:
     :param get_user_manager: User manager dependency callable.
     """
 
-    backends: Sequence[BaseAuthenticationBackend]
+    backends: Sequence[BaseAuthenticationBackend[models.UP, models.ID, TokenType]]
 
     def __init__(
         self,
@@ -62,7 +66,9 @@ class Authenticator:
         active: bool = False,
         verified: bool = False,
         superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency] = None,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.ID, TokenType]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user and token.
@@ -88,7 +94,7 @@ class Authenticator:
         signature = self._get_dependency_signature(get_enabled_backends)
 
         @with_signature(signature)
-        async def current_user_token_dependency(*args, **kwargs):
+        async def current_user_token_dependency(*args: Any, **kwargs: Any):
             return await self._authenticate(
                 *args,
                 optional=optional,
@@ -106,7 +112,9 @@ class Authenticator:
         active: bool = False,
         verified: bool = False,
         superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency] = None,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.ID, TokenType]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user.
@@ -132,7 +140,7 @@ class Authenticator:
         signature = self._get_dependency_signature(get_enabled_backends)
 
         @with_signature(signature)
-        async def current_user_dependency(*args, **kwargs):
+        async def current_user_dependency(*args: Any, **kwargs: Any):
             user, _ = await self._authenticate(
                 *args,
                 optional=optional,
@@ -154,11 +162,11 @@ class Authenticator:
         verified: bool = False,
         superuser: bool = False,
         **kwargs,
-    ) -> Tuple[Optional[models.UP], Optional[Any]]:
+    ) -> tuple[Optional[models.UP], Optional[Any]]:
         user: Optional[models.UP] = None
         token: Optional[str] = None
-        enabled_backends: Sequence[BaseAuthenticationBackend] = kwargs.get(
-            "enabled_backends", self.backends
+        enabled_backends: Sequence[BaseAuthenticationBackend[models.UP, models.ID, TokenType]] = (
+            kwargs.get("enabled_backends", self.backends)
         )
         for backend in self.backends:
             if backend in enabled_backends:
@@ -197,7 +205,7 @@ class Authenticator:
         This way, each security schemes are detected by the OpenAPI generator.
         """
         try:
-            parameters: List[Parameter] = [
+            parameters: list[Parameter] = [
                 Parameter(
                     name="user_manager",
                     kind=Parameter.POSITIONAL_OR_KEYWORD,

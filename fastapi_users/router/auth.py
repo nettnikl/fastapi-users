@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -9,6 +7,7 @@ from fastapi_users.authentication import (
     BaseAuthenticationBackend,
     Strategy,
 )
+from fastapi_users.authentication.models import TokenType
 from fastapi_users.authentication.backend import AuthenticationBackendRefresh
 from fastapi_users.authentication.strategy.base import StrategyRefresh
 from fastapi_users.manager import BaseUserManager, UserManagerDependency
@@ -17,9 +16,9 @@ from fastapi_users.router.common import ErrorCode, ErrorModel
 
 
 def get_auth_router(
-    backend: BaseAuthenticationBackend,
+    backend: BaseAuthenticationBackend[models.UP, models.ID, TokenType],
     get_user_manager: UserManagerDependency[models.UP, models.ID],
-    authenticator: Authenticator,
+    authenticator: Authenticator[models.UP, models.ID, TokenType],
     requires_verification: bool = False,
 ) -> APIRouter:
     """Generate a router with login/logout routes for an authentication backend."""
@@ -90,7 +89,7 @@ def get_auth_router(
         "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
     )
     async def logout(
-        user_token: Tuple[models.UP, str] = Depends(get_current_user_token),
+        user_token: tuple[models.UP, str] = Depends(get_current_user_token),
         strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
     ):
         user, token = user_token

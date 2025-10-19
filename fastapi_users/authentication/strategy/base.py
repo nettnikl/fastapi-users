@@ -32,7 +32,6 @@ class BaseStrategy(
         self, token: TokenIdentityType, user: models.UP
     ) -> None: ...  # pragma: no cover
 
-
 class Strategy(
     BaseStrategy[models.UP, models.ID, str, str], Generic[models.UP, models.ID]
 ):
